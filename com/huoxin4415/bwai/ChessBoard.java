@@ -97,7 +97,7 @@ public class ChessBoard {
         int result = 0;
         for (int i = 1; i <= length; i++) {
             if (board[x + xIncr * i][y + yIncr * i] == piece) {
-                for (int j = 1; j <= i; j++) {
+                for (int j = 1; j < i; j++) {
                     board[x + xIncr * j][y + yIncr * j] = piece;
                     result++;
                 }

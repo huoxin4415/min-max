@@ -5,7 +5,9 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.LinkedList;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,10 +23,15 @@ public class BlackWhite extends JFrame {
     private JButton[][] bs;
     private JLabel scoreInfo;
 
+    private LinkedList<Point> trace;
+
     // 构造函数
     public BlackWhite(BlackWhiteAI ai, int size) {
         this.piece = 1;
         this.ai = ai;
+        this.trace = new LinkedList<>();
+        this.trace.addFirst(new Point(Integer.MIN_VALUE, Integer.MIN_VALUE));
+        this.trace.addFirst(new Point(Integer.MIN_VALUE, Integer.MIN_VALUE));
 
         JPanel boardPanel = new JPanel();
         boardPanel.setLayout(new GridLayout(size, size, 0, 0));
@@ -70,6 +77,16 @@ public class BlackWhite extends JFrame {
         this.piece = piece;
     }
 
+    public void trace(int x, int y) {
+        trace.addLast(new Point(x, y));
+        Point rp = trace.removeFirst();
+        
+
+        if (rp.getX() >= 0 && rp.getX() < bs.length && rp.getY() >= 0 && rp.getY() < bs.length) {
+            bs[rp.getX()][rp.getY()].setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        }
+    }
+
     public void refush() {
         int[][] board = ai.getCb().getBoard();
         int white = 0;
@@ -85,6 +102,16 @@ public class BlackWhite extends JFrame {
                 }
             }
         }
+
+        for(Point p : trace) {
+            if (p.getX() < 0 || p.getX() > board.length - 1 || p.getY() < 0 || p.getY() > board.length - 1) {
+                continue;
+            } else {
+                bs[p.getX()][p.getY()].setBorder(BorderFactory.createLineBorder(Color.RED));
+            }
+
+        }
+
         scoreInfo.setText(String.format("黑：%d  白：%d", black, white));
     }
 
@@ -107,6 +134,7 @@ public class BlackWhite extends JFrame {
             if (ai.fall(x, y, bw.getPiece()) == 0) {
                 return;
             }
+            trace(x, y);
             refush();
 
             bw.setPiece(-bw.getPiece());
@@ -115,11 +143,30 @@ public class BlackWhite extends JFrame {
             if (ai.fall(next[0], next[1], bw.getPiece()) == 0) {
                 return;
             }
+            trace(next[0], next[1]);
             refush();
 
             bw.setPiece(-bw.getPiece());
         }
 
+    }
+
+    class Point {
+        private int x;
+        private int y;
+
+        public Point(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public int getX() {
+            return this.x;
+        }
+
+        public int getY() {
+            return this.y;
+        }
     }
 
     public static void main(String[] args) {
