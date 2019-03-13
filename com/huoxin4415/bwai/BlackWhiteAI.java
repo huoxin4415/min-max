@@ -35,6 +35,26 @@ public class BlackWhiteAI {
         return new int[]{nextNode.getX(), nextNode.getY()};
     }
 
+    public boolean isFinish() {
+        return this.cb.getFreeSize() <= 0;
+    }
+
+    public int result() {
+        Integer black = 0;
+        Integer white = 0;
+        int[][] board = this.cb.getBoard();
+        for (int x = 0; x < board.length; x++) {
+            for (int y = 0; y < board[x].length; y++) {
+                if (board[x][y] == 1) {
+                    black++;
+                } else if (board[x][y] == -1) {
+                    white++;
+                } 
+            }
+        }
+        return black.compareTo(white);
+    }
+
     public ChessBoard getCb() {
         return this.cb;
     }

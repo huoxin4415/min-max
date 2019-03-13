@@ -5,17 +5,23 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.LinkedList;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class BlackWhite extends JFrame {
 
     private static final long serialVersionUID = -5050817808729948877L;
+
+    private static final ImageIcon iconBlack = new ImageIcon("image" + File.separator + "black.png");
+    private static final ImageIcon iconWhite = new ImageIcon("image" + File.separator + "white.png");
 
     private int piece;
     private BlackWhiteAI ai;
@@ -40,6 +46,9 @@ public class BlackWhite extends JFrame {
             for (int y = 0; y < size; y++) {
                 JButton button = new JButton();
                 button.addActionListener(new BWActionListener(x, y, ai, this));
+                button.setBackground(new Color(37, 105, 46));
+                button.setSize(58, 58);
+                button.setBorder(BorderFactory.createLineBorder(new Color(123, 179, 128)));
                 boardPanel.add(button);
                 bs[x][y] = button;
             }
@@ -59,7 +68,7 @@ public class BlackWhite extends JFrame {
 
         // 设置窗体属性
         this.setTitle("黑白棋");
-        this.setSize(300, 350);
+        this.setSize(480, 530);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocation(200, 200);
 
@@ -94,10 +103,10 @@ public class BlackWhite extends JFrame {
         for (int x = 0; x < board.length; x++) {
             for (int y = 0; y < board[x].length; y++) {
                 if (board[x][y] == 1) {
-                    bs[x][y].setBackground(Color.BLACK);
+                    bs[x][y].setIcon(iconBlack);
                     black++;
                 } else if (board[x][y] == -1){
-                    bs[x][y].setBackground(Color.WHITE);
+                    bs[x][y].setIcon(iconWhite);
                     white++;
                 }
             }
@@ -137,6 +146,13 @@ public class BlackWhite extends JFrame {
             trace(x, y);
             refush();
 
+            if (ai.isFinish()) {
+
+                ai.result();
+                JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);  
+                return;
+            } 
+
             bw.setPiece(-bw.getPiece());
 
             int[] next = ai.next();
@@ -146,7 +162,16 @@ public class BlackWhite extends JFrame {
             trace(next[0], next[1]);
             refush();
 
+            if (ai.isFinish()) {
+                JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);  
+                return;
+            } 
+
             bw.setPiece(-bw.getPiece());
+        }
+
+        private String resultMsg(int result) {
+            return result > 0 ? "对局结束，黑方胜！" : result < 0 ? "对局结束，白方胜！" : "对局结束，双方平局！";
         }
 
     }
