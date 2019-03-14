@@ -27,6 +27,7 @@ public class BlackWhiteAI {
 
     public int[] next() {
         extend(this.current, 1, this.cb);
+        System.out.println(String.format("current score:%d", this.current.getScore().intValue()));
         TreeNode nextNode = new TreeNode(0, 0, 0);
         nextNode.setScore(Integer.MIN_VALUE);
         System.out.print("score：");
@@ -77,20 +78,20 @@ public class BlackWhiteAI {
         if (level < MAX_LEVEL) {
     		// for (int x = 0; x < cb.getWidth(); x++) {
             //     for (int y = 0; y < cb.getHeight(); y++) {
-            for (int x = Math.max(cb.getMinX() - 1, 0); x <= Math.min(cb.getMaxX() + 1, cb.getWidth()); x++) {
-                for (int y = Math.max(cb.getMinY() - 1, 0); y <= Math.min(cb.getMaxY() + 1, cb.getHeight()); y++) {
+            for (int x = Math.max(cb.getMinX() - 1, 0); x < Math.min(cb.getMaxX() + 2, cb.getWidth()); x++) {
+                for (int y = Math.max(cb.getMinY() - 1, 0); y < Math.min(cb.getMaxY() + 2, cb.getHeight()); y++) {
                     if (cb.getBoard()[x][y] == 0) {
-                        if (node.getScore() != null && node.getParent() != null) {
-                        	if (node.getPiece() != current.getPiece()) { // MAX
-                        		if (node.getScore() > node.getParent().getScore()) { // MIN
-                        			continue; // 剪枝
-                        		}
-                        	} else { // MIN
-                        		if (node.getScore() < node.getParent().getScore()) { // MAX
-                        			continue; // 剪枝
-                        		}
-                        	}
-                        }
+                        // if (node.getScore() != null && node.getParent() != null) {
+                        // 	if (node.getPiece() != current.getPiece()) { // MAX
+                        // 		if (node.getScore() > node.getParent().getScore()) { // MIN
+                        // 			continue; // 剪枝
+                        // 		}
+                        // 	} else { // MIN
+                        // 		if (node.getScore() < node.getParent().getScore()) { // MAX
+                        // 			continue; // 剪枝
+                        // 		}
+                        // 	}
+                        // }
                         
                         ChessBoard childCb = new ChessBoard(cb);
                         if (childCb.fall(x, y, -node.getPiece()) == 0) {
@@ -117,10 +118,8 @@ public class BlackWhiteAI {
             }
         }
 
-    	
-    	
         if (node.getChildren() == null || node.getChildren().size() == 0) { // 叶子节点
-            int score = Score.grade(cb.getBoard(), -current.getPiece());
+            int score = Score.grade(cb.getBoard(), -current.getPiece(), cb.getFreeSize());
 
             if (cb.getFreeSize() == 0) { // 结束
                 if (score > 0) {
@@ -131,7 +130,7 @@ public class BlackWhiteAI {
             }
 
             node.setScore(score);
-            if (node.getPiece() != current.getPiece()) { // MAX
+            if (node.getPiece() == current.getPiece()) { // MAX
                 TreeNode p = node.getParent(); // MIN
                 TreeNode pp = p.getParent(); // MAX
                 if (p.getScore() == null) {
@@ -139,9 +138,13 @@ public class BlackWhiteAI {
                 } else {
                     p.setScore(Math.min(p.getScore(), score));
                 }
-                if (pp != null) {
-                	pp.setScore(p.getScore());
-                }
+                // if (pp != null) {
+                //     if (pp.getScore() == null) {
+                //         pp.setScore(p.getScore());
+                //     } else {
+                //         pp.setScore(Math.max(p.getScore(), pp.getScore()));
+                //     }
+                // }
                 return;
             } else { // MIN
                 TreeNode p = node.getParent(); // MAX
@@ -151,9 +154,13 @@ public class BlackWhiteAI {
                 } else {
                     p.setScore(Math.max(p.getScore(), score));
                 }
-                if (pp != null) {
-                	pp.setScore(p.getScore());
-                }
+                // if (pp != null) {
+                // 	if (pp.getScore() == null) {
+                //         pp.setScore(p.getScore());
+                //     } else {
+                //         pp.setScore(Math.min(p.getScore(), pp.getScore()));
+                //     }
+                // }
             }
             return;
         } else if (node.getParent() != null){ // 分支节点
@@ -166,9 +173,13 @@ public class BlackWhiteAI {
                 } else {
                     p.setScore(Math.min(p.getScore(), score));
                 }
-                if (pp != null) {
-                	pp.setScore(p.getScore());
-                }
+                // if (pp != null) {
+                //     if (pp.getScore() == null) {
+                //         pp.setScore(p.getScore());
+                //     } else {
+                //         pp.setScore(Math.max(p.getScore(), pp.getScore()));
+                //     }
+                // }
                 return;
             } else { // MIN
                 TreeNode p = node.getParent(); // MAX
@@ -178,9 +189,13 @@ public class BlackWhiteAI {
                 } else {
                     p.setScore(Math.max(p.getScore(), score));
                 }
-                if (pp != null) {
-                	pp.setScore(p.getScore());
-                }
+                // if (pp != null) {
+                // 	if (pp.getScore() == null) {
+                //         pp.setScore(p.getScore());
+                //     } else {
+                //         pp.setScore(Math.min(p.getScore(), pp.getScore()));
+                //     }
+                // }
             }
             return;
         }
