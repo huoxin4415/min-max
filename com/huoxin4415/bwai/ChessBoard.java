@@ -29,12 +29,16 @@ public class ChessBoard {
         this.width = cb.width;
         this.height = cb.height;
         this.board = new int[width][height];
-        this.freeSize = width * height;
+        this.freeSize = cb.freeSize;
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 this.board[i][j] = cb.board[i][j];
             }
         }
+        this.minX = cb.minX;
+        this.maxX = cb.maxX;
+        this.minY = cb.minY;
+        this.maxY = cb.maxY;
     }
 
     public int fall(int x, int y, int piece) {
