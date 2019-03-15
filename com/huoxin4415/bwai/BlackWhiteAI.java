@@ -11,8 +11,11 @@ public class BlackWhiteAI {
 
     private static final int MAX_LEVEL = 23;
 
+    private int piece;
+
     public BlackWhiteAI(int width, int height) {
         this.cb = new ChessBoard(width, height);
+        this.piece = -1;
     }
 
     public int fall(int x, int y, int piece) {
@@ -119,7 +122,7 @@ public class BlackWhiteAI {
         }
 
         if (node.getChildren() == null || node.getChildren().size() == 0) { // 叶子节点
-            int score = Score.grade(cb.getBoard(), -current.getPiece(), cb.getFreeSize());
+            int score = Score.grade(cb.getBoard(), this.piece, cb.getFreeSize());
 
             if (cb.getFreeSize() == 0) { // 结束
                 if (score > 0) {
