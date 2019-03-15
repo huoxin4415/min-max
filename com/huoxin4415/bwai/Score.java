@@ -12,18 +12,18 @@ public class Score {
     
     public static int grade(int[][] chess, int piece, int freeSize) {
         if (freeSize == 0) {
-            return expectScore(chess, piece);
-        } else {
             return clearScore(chess, piece);
+        } else {
+            return expectScore(chess, piece);
         }
     }
 
     /**
-     * 期望评分
-     * 用于未完成棋局评分
+     * 明确评分
+     * 用于已完成棋局评分
      * @return
      */
-    private static int expectScore(int[][] chess, int piece) {
+    private static int clearScore(int[][] chess, int piece) {
         int score = 0;
         for (int x = 0; x < chess.length; x++) {
             for (int y = 0; y < chess[x].length; y++) {
@@ -39,11 +39,11 @@ public class Score {
     } 
 
     /**
-     * 明确评分
-     * 用于已完成棋局评分
+     * 期望评分
+     * 用于未完成棋局评分
      * @return
      */
-    private static int clearScore(int[][] chess, int piece) {
+    private static int expectScore(int[][] chess, int piece) {
         int score = 0;
         int[][] highest = {{0,0}, {0, chess.length - 1}, {chess.length - 1, 0}, {chess.length - 1, chess.length - 1}};
         // highest
