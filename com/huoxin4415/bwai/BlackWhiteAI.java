@@ -28,7 +28,8 @@ public class BlackWhiteAI {
         }
     }
 
-    public int[] next() {
+    public int[] next(int nextPiece) {
+        this.current.setPiece(-nextPiece);
         extend(this.current, 1, this.cb);
         System.out.println(String.format("current score:%d", this.current.getScore().intValue()));
         TreeNode nextNode = new TreeNode(0, 0, 0);
@@ -43,6 +44,20 @@ public class BlackWhiteAI {
         System.out.println();
 
         return new int[]{nextNode.getX(), nextNode.getY()};
+    }
+
+    public boolean hasChoice(int piece) {
+        for (int x = Math.max(cb.getMinX() - 1, 0); x < Math.min(cb.getMaxX() + 2, cb.getWidth()); x++) {
+            for (int y = Math.max(cb.getMinY() - 1, 0); y < Math.min(cb.getMaxY() + 2, cb.getHeight()); y++) {
+                if (cb.getBoard()[x][y] == 0) {
+                    ChessBoard childCb = new ChessBoard(cb);
+                    if (childCb.fall(x, y, piece) != 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public boolean isFinish() {
@@ -133,7 +148,7 @@ public class BlackWhiteAI {
             }
 
             node.setScore(score);
-            if (node.getPiece() == current.getPiece()) { // MAX
+            if (node.getPiece() != this.piece) { // MAX
                 TreeNode p = node.getParent(); // MIN
                 TreeNode pp = p.getParent(); // MAX
                 if (p.getScore() == null) {
@@ -168,7 +183,7 @@ public class BlackWhiteAI {
             return;
         } else if (node.getParent() != null){ // 分支节点
             int score = node.getScore();
-            if (node.getPiece() == current.getPiece()) { // MAX
+            if (node.getPiece() != this.piece) { // MAX
                 TreeNode p = node.getParent(); // MIN
                 TreeNode pp = p.getParent(); // MAX
                 if (p.getScore() == null) {
@@ -231,6 +246,10 @@ public class BlackWhiteAI {
 
         public int getPiece() {
             return this.piece;
+        }
+
+        public void setPiece(int piece) {
+            this.piece = piece;
         }
 
         public Integer getScore() {
