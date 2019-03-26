@@ -3,6 +3,7 @@ package com.huoxin4415.bwai;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
 
 public class BlackWhiteAI {
 
@@ -29,8 +30,10 @@ public class BlackWhiteAI {
     }
 
     public int[] next(int nextPiece) {
+        long startTime = System.currentTimeMillis();
         this.current.setPiece(-nextPiece);
         extend(this.current, 1, this.cb);
+        // extendCurrent(this.current, 1, this.cb);
         System.out.println(String.format("current score:%d", this.current.getScore().intValue()));
         TreeNode nextNode = new TreeNode(0, 0, 0);
         nextNode.setScore(Integer.MIN_VALUE);
@@ -42,7 +45,7 @@ public class BlackWhiteAI {
             }
         }
         System.out.println();
-
+        System.out.println("Cost Time: " + (System.currentTimeMillis() - startTime) / 1000 + "s");
         return new int[]{nextNode.getX(), nextNode.getY()};
     }
 
@@ -89,27 +92,41 @@ public class BlackWhiteAI {
     }
 
     private void extend(TreeNode node, int level, ChessBoard cb) {
-    	// if (cb.getFreeSize() == 0) {
-    	// 	return;
-    	// }
         
         if (level < MAX_LEVEL) {
-    		// for (int x = 0; x < cb.getWidth(); x++) {
-            //     for (int y = 0; y < cb.getHeight(); y++) {
-            for (int x = Math.max(cb.getMinX() - 1, 0); x < Math.min(cb.getMaxX() + 2, cb.getWidth()); x++) {
+            boolean cut = false;
+            for (int x = Math.max(cb.getMinX() - 1, 0); x < Math.min(cb.getMaxX() + 2, cb.getWidth()) && !cut; x++) {
                 for (int y = Math.max(cb.getMinY() - 1, 0); y < Math.min(cb.getMaxY() + 2, cb.getHeight()); y++) {
                     if (cb.getBoard()[x][y] == 0) {
-                        // if (node.getScore() != null && node.getParent() != null) {
-                        // 	if (node.getPiece() != current.getPiece()) { // MAX
-                        // 		if (node.getScore() > node.getParent().getScore()) { // MIN
-                        // 			continue; // 剪枝
-                        // 		}
-                        // 	} else { // MIN
-                        // 		if (node.getScore() < node.getParent().getScore()) { // MAX
-                        // 			continue; // 剪枝
-                        // 		}
-                        // 	}
-                        // }
+
+                        if (node.getScore() != null && node.getParent() != null) {
+                            List<TreeNode> brothers = node.getParent().getChildren();
+
+                            if (node.getPiece() != this.piece) { // MAX
+                                for (TreeNode brother : brothers) {
+                                    if (node != brother && null != brother.getScore() && node.getScore() >= brother.getScore()) {
+                                        cut = true;
+                                        break;
+                                    }
+                                }
+
+                                if (cut) {
+                                    break; // Beta剪枝
+                                }
+                        		
+                        	} else { // MIN
+                                for (TreeNode brother : brothers) {
+                                    if (node != brother && null != brother.getScore() && node.getScore() <= brother.getScore()) {
+                                        cut = true;
+                                        break;
+                                    }
+                                }
+
+                                if (cut) {
+                                    break; // Alpha剪枝
+                                }
+                        	}
+                        }
                         
                         ChessBoard childCb = new ChessBoard(cb);
                         if (childCb.fall(x, y, -node.getPiece()) == 0) {
@@ -139,85 +156,90 @@ public class BlackWhiteAI {
         if (node.getChildren() == null || node.getChildren().size() == 0) { // 叶子节点
             int score = Score.grade(cb.getBoard(), this.piece, cb.getFreeSize());
 
-            if (cb.getFreeSize() == 0) { // 结束
-                if (score > 0) {
-                    // System.out.println("win!");
-                } else {
-                    // System.out.println("lost!");
-                }
-            }
-
             node.setScore(score);
-            if (node.getPiece() != this.piece) { // MAX
-                TreeNode p = node.getParent(); // MIN
-                TreeNode pp = p.getParent(); // MAX
-                if (p.getScore() == null) {
-                    p.setScore(score);
-                } else {
-                    p.setScore(Math.min(p.getScore(), score));
+            TreeNode p = node.getParent();
+            if (p != null) {
+                if (node.getPiece() != this.piece) { // MAX
+                    if (p.getScore() == null) {
+                        p.setScore(score);
+                    } else {
+                        p.setScore(Math.min(p.getScore(), score));
+                    }
+                } else { // MIN
+                    if (p.getScore() == null) {
+                        p.setScore(score);
+                    } else {
+                        p.setScore(Math.max(p.getScore(), score));
+                    }
                 }
-                // if (pp != null) {
-                //     if (pp.getScore() == null) {
-                //         pp.setScore(p.getScore());
-                //     } else {
-                //         pp.setScore(Math.max(p.getScore(), pp.getScore()));
-                //     }
-                // }
-                return;
-            } else { // MIN
-                TreeNode p = node.getParent(); // MAX
-                TreeNode pp = p.getParent(); // MIN
-                if (p.getScore() == null) {
-                    p.setScore(score);
-                } else {
-                    p.setScore(Math.max(p.getScore(), score));
-                }
-                // if (pp != null) {
-                // 	if (pp.getScore() == null) {
-                //         pp.setScore(p.getScore());
-                //     } else {
-                //         pp.setScore(Math.min(p.getScore(), pp.getScore()));
-                //     }
-                // }
             }
+            
             return;
         } else if (node.getParent() != null){ // 分支节点
             int score = node.getScore();
             if (node.getPiece() != this.piece) { // MAX
                 TreeNode p = node.getParent(); // MIN
-                TreeNode pp = p.getParent(); // MAX
                 if (p.getScore() == null) {
                     p.setScore(score);
                 } else {
                     p.setScore(Math.min(p.getScore(), score));
                 }
-                // if (pp != null) {
-                //     if (pp.getScore() == null) {
-                //         pp.setScore(p.getScore());
-                //     } else {
-                //         pp.setScore(Math.max(p.getScore(), pp.getScore()));
-                //     }
-                // }
-                return;
             } else { // MIN
                 TreeNode p = node.getParent(); // MAX
-                TreeNode pp = p.getParent(); // MIN
                 if (p.getScore() == null) {
                     p.setScore(score);
                 } else {
                     p.setScore(Math.max(p.getScore(), score));
                 }
-                // if (pp != null) {
-                // 	if (pp.getScore() == null) {
-                //         pp.setScore(p.getScore());
-                //     } else {
-                //         pp.setScore(Math.min(p.getScore(), pp.getScore()));
-                //     }
-                // }
             }
             return;
         }
 
+    }
+
+    private void extendCurrent(TreeNode node, int level, ChessBoard cb) {
+        List<CompletableFuture> cfList = new LinkedList<>();
+
+        for (int x = Math.max(cb.getMinX() - 1, 0); x < Math.min(cb.getMaxX() + 2, cb.getWidth()); x++) {
+            for (int y = Math.max(cb.getMinY() - 1, 0); y < Math.min(cb.getMaxY() + 2, cb.getHeight()); y++) {
+                if (cb.getBoard()[x][y] == 0) {
+                    
+                    ChessBoard childCb = new ChessBoard(cb);
+                    if (childCb.fall(x, y, -node.getPiece()) == 0) {
+                        continue;
+                    }
+                    
+                    TreeNode child = new TreeNode(x, y, -node.getPiece());
+                    node.addChild(child);
+                    child.setParent(node);
+
+                    cfList.add(CompletableFuture.runAsync(new ExtendRunnable(child, ++level, childCb)));
+
+                    
+                }
+            }
+        }
+        CompletableFuture<Void> cfs = CompletableFuture.allOf(cfList.toArray(new CompletableFuture[cfList.size()]));
+        cfs.join();
+    }
+
+    class ExtendRunnable implements Runnable {
+
+        private TreeNode node;
+        private int level;
+        private ChessBoard cb;
+
+        public ExtendRunnable(TreeNode node, int level, ChessBoard cb) {
+            this.node = node;
+            this.level = level;
+            this.cb = cb;
+        }
+
+        public void run() {
+            long start = System.currentTimeMillis();
+            BlackWhiteAI.this.extend(node, level, cb);
+            System.out.println(System.currentTimeMillis() - start);
+        }
     }
 
     class TreeNode {
