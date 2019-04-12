@@ -2,7 +2,6 @@ package com.huoxin4415.bwai;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 
 public class BlackWhiteAI {
@@ -32,8 +31,8 @@ public class BlackWhiteAI {
     public int[] next(int nextPiece) {
         long startTime = System.currentTimeMillis();
         this.current.setPiece(-nextPiece);
-        extend(this.current, 1, this.cb);
-        // extendCurrent(this.current, 1, this.cb);
+        // extend(this.current, 1, this.cb);
+        extendCurrent(this.current, 1, this.cb);
         System.out.println(String.format("current score:%d", this.current.getScore().intValue()));
         TreeNode nextNode = new TreeNode(0, 0, 0);
         nextNode.setScore(Integer.MIN_VALUE);
@@ -198,7 +197,7 @@ public class BlackWhiteAI {
     }
 
     private void extendCurrent(TreeNode node, int level, ChessBoard cb) {
-        List<CompletableFuture> cfList = new LinkedList<>();
+        List<CompletableFuture<Void>> cfList = new LinkedList<>();
 
         for (int x = Math.max(cb.getMinX() - 1, 0); x < Math.min(cb.getMaxX() + 2, cb.getWidth()); x++) {
             for (int y = Math.max(cb.getMinY() - 1, 0); y < Math.min(cb.getMaxY() + 2, cb.getHeight()); y++) {
@@ -236,9 +235,7 @@ public class BlackWhiteAI {
         }
 
         public void run() {
-            long start = System.currentTimeMillis();
             BlackWhiteAI.this.extend(node, level, cb);
-            System.out.println(System.currentTimeMillis() - start);
         }
     }
 

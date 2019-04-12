@@ -25,6 +25,7 @@ public class BlackWhite extends JFrame {
     private static final ImageIcon iconBlackSm = new ImageIcon("image" + File.separator + "black_sm.png");
     private static final ImageIcon iconWhiteSm = new ImageIcon("image" + File.separator + "white_sm.png");
 
+    private int userPiece;
     private int piece;
     private BlackWhiteAI ai;
 
@@ -36,8 +37,10 @@ public class BlackWhite extends JFrame {
 
     // 构造函数
     public BlackWhite(BlackWhiteAI ai, int size) {
+        this.userPiece = 1;
         this.piece = 1;
         this.ai = ai;
+
         this.trace = new LinkedList<>();
         this.trace.addFirst(new Point(Integer.MIN_VALUE, Integer.MIN_VALUE));
         this.trace.addFirst(new Point(Integer.MIN_VALUE, Integer.MIN_VALUE));
@@ -56,22 +59,17 @@ public class BlackWhite extends JFrame {
                 bs[x][y] = button;
             }
         }
-
-        // tihs.add(boardPanel,BorderLayout.NORTH);
         boardPanel.setSize(300, 300);
         this.add(boardPanel, BorderLayout.CENTER);
-        
 
         JPanel scorePanel = new JPanel();
         scoreInfo = new JLabel();
         scoreInfo.setText("黑：2  白：2");
         scorePanel.add(scoreInfo);
         scorePanel.add(new JLabel("    当前:"));
-        // currentPieceIcon = iconBlack;
         currentPiece = new JLabel();
         currentPiece.setIcon(iconBlackSm);
         scorePanel.add(currentPiece);
-
 
         this.add(scorePanel, BorderLayout.SOUTH);
 
@@ -87,6 +85,10 @@ public class BlackWhite extends JFrame {
         refush();
     }
 
+    public int getUserPiece() {
+        return this.userPiece;
+    }
+
     public int getPiece() {
         return this.piece;
     }
@@ -98,7 +100,6 @@ public class BlackWhite extends JFrame {
     public void trace(int x, int y) {
         trace.addLast(new Point(x, y));
         Point rp = trace.removeFirst();
-        
 
         if (rp.getX() >= 0 && rp.getX() < bs.length && rp.getY() >= 0 && rp.getY() < bs.length) {
             bs[rp.getX()][rp.getY()].setBorder(BorderFactory.createLineBorder(Color.GRAY));
@@ -114,14 +115,14 @@ public class BlackWhite extends JFrame {
                 if (board[x][y] == 1) {
                     bs[x][y].setIcon(iconBlack);
                     black++;
-                } else if (board[x][y] == -1){
+                } else if (board[x][y] == -1) {
                     bs[x][y].setIcon(iconWhite);
                     white++;
                 }
             }
         }
 
-        for(Point p : trace) {
+        for (Point p : trace) {
             if (p.getX() < 0 || p.getX() > board.length - 1 || p.getY() < 0 || p.getY() > board.length - 1) {
                 continue;
             } else {
@@ -131,20 +132,20 @@ public class BlackWhite extends JFrame {
         }
 
         scoreInfo.setText(String.format("黑：%d  白：%d", black, white));
-        
+
     }
 
     public int switchPiect() {
-        if (ai.hasChoice(- this.piece)) {
-            this.piece = - this.piece;
+        if (ai.hasChoice(-this.piece)) {
+            this.piece = -this.piece;
             currentPiece.setIcon(this.piece == 1 ? iconBlackSm : iconWhiteSm);
             return this.piece;
-        } else if (ai.hasChoice(this.piece)){
+        } else if (ai.hasChoice(this.piece)) {
             return this.piece;
         } else {
             return 0;
         }
-        
+
     }
 
     class BWActionListener implements ActionListener {
@@ -163,6 +164,10 @@ public class BlackWhite extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            if (bw.getUserPiece() != bw.getPiece()) {
+                return;
+            }
+
             if (ai.fall(x, y, bw.getPiece()) == 0) {
                 return;
             } else {
@@ -170,38 +175,69 @@ public class BlackWhite extends JFrame {
                 bw.refush();
 
                 if (ai.isFinish()) {
-                    JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);  
+                    JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);
                     return;
-                } 
+                }
             }
-            
+
             int lastPiece = bw.getPiece();
             int nextPiece = bw.switchPiect();
-            if(nextPiece == lastPiece) {
+            if (nextPiece == lastPiece) {
                 return;
-            } else if (nextPiece == 0){
-                JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);  
+            } else if (nextPiece == 0) {
+                JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
 
-            do {
-                int[] next = ai.next(nextPiece);
-                if (ai.fall(next[0], next[1], bw.getPiece()) == nextPiece) {
-                    trace(next[0], next[1]);
-                    bw.refush();
+            next(nextPiece);
 
-                    if (ai.isFinish()) {
-                        JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);  
+            // do {
+            //     int[] next = ai.next(nextPiece);
+            //     if (ai.fall(next[0], next[1], bw.getPiece()) == nextPiece) {
+            //         trace(next[0], next[1]);
+            //         bw.refush();
+
+            //         if (ai.isFinish()) {
+            //             JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋",
+            //                     JOptionPane.INFORMATION_MESSAGE);
+            //             return;
+            //         }
+            //     }
+            //     lastPiece = bw.getPiece();
+            //     nextPiece = bw.switchPiect();
+            //     if (nextPiece == 0) {
+            //         JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);
+            //         return;
+            //     }
+            // } while (nextPiece == lastPiece);
+        }
+
+        private void next(int piece) {
+            
+            new Thread(() -> {
+                int lastPiece;
+                int nextPiece = piece;
+                do {
+                    int[] next = ai.next(nextPiece);
+                    if (ai.fall(next[0], next[1], bw.getPiece()) == nextPiece) {
+                        trace(next[0], next[1]);
+                        bw.refush();
+    
+                        if (ai.isFinish()) {
+                            JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            return;
+                        }
+                    }
+                    lastPiece = bw.getPiece();
+                    nextPiece = bw.switchPiect();
+                    if (nextPiece == 0) {
+                        JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);
                         return;
-                    } 
-                }
-                lastPiece = bw.getPiece();
-                nextPiece = bw.switchPiect();
-                if (nextPiece == 0){
-                    JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);  
-                    return;
-                }
-            } while(nextPiece == lastPiece);
+                    }
+                } while (nextPiece == lastPiece);
+            }).start();
+            
         }
 
         private String resultMsg(int result) {
@@ -217,7 +253,7 @@ public class BlackWhite extends JFrame {
         public Point(int x, int y) {
             this.x = x;
             this.y = y;
-        } 
+        }
 
         public int getX() {
             return this.x;
