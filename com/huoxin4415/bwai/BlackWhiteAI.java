@@ -9,8 +9,6 @@ public class BlackWhiteAI {
     private ChessBoard cb;
     private TreeNode current;
 
-    private static final int MAX_LEVEL = 23;
-
     private int piece;
 
     public BlackWhiteAI(int width, int height) {
@@ -92,7 +90,7 @@ public class BlackWhiteAI {
 
     private void extend(TreeNode node, int level, ChessBoard cb) {
         
-        if (level < MAX_LEVEL) {
+        if (level < Config.MAX_LEVEL) {
             boolean cut = false;
             for (int x = Math.max(cb.getMinX() - 1, 0); x < Math.min(cb.getMaxX() + 2, cb.getWidth()) && !cut; x++) {
                 for (int y = Math.max(cb.getMinY() - 1, 0); y < Math.min(cb.getMaxY() + 2, cb.getHeight()); y++) {
