@@ -6,7 +6,7 @@ package com.huoxin4415.bwai;
  * 评分分为：明确评分、期望评分
  * 对可预测至完成的棋局，采用明确评分方案；对无法预测最终完成的棋局，采用期望评分方案。
  */
-public class Score {
+public class PositionScorer {
 
     public static int grade(int[][] chess, int piece, int freeSize) {
         if (freeSize == 0) {

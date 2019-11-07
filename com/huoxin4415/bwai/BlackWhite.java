@@ -18,15 +18,15 @@ public class BlackWhite extends JFrame {
 
     private static final long serialVersionUID = -5050817808729948877L;
 
-    private BlackWhiteAI ai;
-    private Piece userPiece;
-    private Piece currentPiece;
+    private BlackWhiteAI ai;    // AI决策对象
+    private Piece userPiece;    // 玩家棋子
+    private Piece currentPiece; // 当前待落棋子
 
-    private JButton[][] bs;
-    private JLabel scoreInfoLabel;
-    private JLabel currentPieceLabel;
+    private JButton[][] bs;     // 棋盘棋子按钮
+    private JLabel scoreInfoLabel;  // 得分Label
+    private JLabel currentPieceLabel;   // 当前待落棋子Label
 
-    private LinkedList<Point> trace;
+    private LinkedList<Point> trace;    // 落子轨迹
 
     // 构造函数
     public BlackWhite(BlackWhiteAI ai, int size, Piece userPiece) {
@@ -38,6 +38,7 @@ public class BlackWhite extends JFrame {
         this.trace.addFirst(new Point(Integer.MIN_VALUE, Integer.MIN_VALUE)); // 占位对象
         this.trace.addFirst(new Point(Integer.MIN_VALUE, Integer.MIN_VALUE)); // 占位对象
 
+        // 初始化棋盘panel
         JPanel boardPanel = new JPanel();
         boardPanel.setLayout(new GridLayout(size, size, 0, 0));
         bs = new JButton[size][size];
@@ -55,6 +56,7 @@ public class BlackWhite extends JFrame {
         boardPanel.setSize(300, 300);
         this.add(boardPanel, BorderLayout.CENTER);
 
+        // 初始化得分panel
         JPanel scorePanel = new JPanel();
         scoreInfoLabel = new JLabel();
         scoreInfoLabel.setText("黑：2  白：2");
@@ -86,6 +88,7 @@ public class BlackWhite extends JFrame {
         return this.currentPiece;
     }
 
+    // 保存落子轨迹
     public void trace(int x, int y) {
         trace.addLast(new Point(x, y));
         Point rp = trace.removeFirst();

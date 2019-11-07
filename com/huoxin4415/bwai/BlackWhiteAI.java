@@ -151,7 +151,7 @@ public class BlackWhiteAI {
         }
 
         if (node.getChildren() == null || node.getChildren().size() == 0) { // 叶子节点
-            int score = Score.grade(cb.getBoard(), this.piece, cb.getFreeSize());
+            int score = PositionScorer.grade(cb.getBoard(), this.piece, cb.getFreeSize());
 
             node.setScore(score);
             TreeNode p = node.getParent();

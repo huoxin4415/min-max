@@ -9,4 +9,10 @@
 - BlackWhite.java 图形客户端
 - BlackWhiteAI.java AI
 - ChessBoard.java 棋盘
-- Score.java 棋局评分
+- PositionScorer.java 棋局评分（位置）
+- SafetyScorer.java 棋局评分（安全性）【待开发】
+- Config.java 全局配置类
+
+##### 待开发：
+1. SafetyScorer评分类
+2. 机器对弈，对比算法优劣
