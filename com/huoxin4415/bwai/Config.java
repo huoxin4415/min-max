@@ -8,7 +8,8 @@ public class Config {
     /**
      * 推理层级，控制AI推理深度
      */
-    public static final int MAX_LEVEL = 25;
+    // public static final int MAX_LEVEL = 25;
+    public static final int MAX_LEVEL = 18;
 
     /**
      * 评分关键参数

@@ -34,7 +34,7 @@ public class BlackWhiteAI {
         System.out.println(String.format("current score:%d", this.current.getScore().intValue()));
         TreeNode nextNode = new TreeNode(0, 0, 0);
         nextNode.setScore(Integer.MIN_VALUE);
-        System.out.print("score：");
+        System.out.print("score:");
         for(TreeNode node : this.current.getChildren()) {
             System.out.print(String.format("[%d,%d]:%d  ", node.getX(), node.getY(), node.getScore()));
             if (node.getScore() > nextNode.getScore()) {
@@ -151,7 +151,8 @@ public class BlackWhiteAI {
         }
 
         if (node.getChildren() == null || node.getChildren().size() == 0) { // 叶子节点
-            int score = PositionScorer.grade(cb.getBoard(), this.piece, cb.getFreeSize());
+            int score = SafetyScorer.grade(cb.getBoard(), this.piece);
+            // int score = PositionScorer.grade(cb.getBoard(), this.piece, cb.getFreeSize());
 
             node.setScore(score);
             TreeNode p = node.getParent();
