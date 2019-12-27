@@ -3,9 +3,6 @@ package com.huoxin4415.bwai;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.LinkedList;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -14,38 +11,45 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import com.huoxin4415.bwai.Player.State;
+
 public class BlackWhite extends JFrame {
 
     private static final long serialVersionUID = -5050817808729948877L;
 
-    private BlackWhiteAI ai;    // AI决策对象
+    // private BlackWhiteAI ai;    // AI决策对象
     private Piece userPiece;    // 玩家棋子
     private Piece currentPiece; // 当前待落棋子
+    private BWState state;    // 棋局状态
+
+    private ChessBoard cb;
+    private Player player1;
+    private Player player2;
+    private Player currentPlayer;
 
     private JButton[][] bs;     // 棋盘棋子按钮
     private JLabel scoreInfoLabel;  // 得分Label
     private JLabel currentPieceLabel;   // 当前待落棋子Label
 
-    private LinkedList<Point> trace;    // 落子轨迹
+    
 
     // 构造函数
-    public BlackWhite(BlackWhiteAI ai, int size, Piece userPiece) {
-        this.userPiece = userPiece;
-        this.currentPiece = userPiece;
-        this.ai = ai;
-
-        this.trace = new LinkedList<>();
-        this.trace.addFirst(new Point(Integer.MIN_VALUE, Integer.MIN_VALUE)); // 占位对象
-        this.trace.addFirst(new Point(Integer.MIN_VALUE, Integer.MIN_VALUE)); // 占位对象
+    public BlackWhite(Player player1, Player player2, ChessBoard cb) {
+        this.player1 = player1;
+        this.player2 = player2;
+        this.currentPlayer = this.player1;
+        this.cb = cb;
+        this.state = BWState.WAITING;
+        this.currentPiece = player1.getPiece();
 
         // 初始化棋盘panel
         JPanel boardPanel = new JPanel();
-        boardPanel.setLayout(new GridLayout(size, size, 0, 0));
-        bs = new JButton[size][size];
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
+        boardPanel.setLayout(new GridLayout(cb.getWidth(), cb.getHeight(), 0, 0));
+        bs = new JButton[cb.getWidth()][cb.getHeight()];
+        for (int y = 0; y < cb.getHeight(); y++) {
+            for (int x = 0; x < cb.getWidth(); x++) {
                 JButton button = new JButton();
-                button.addActionListener(new BWActionListener(x, y, ai, this));
+                button.addActionListener(new HumanPlayerActionListener(x, y, this));
                 button.setBackground(new Color(37, 105, 46));
                 button.setSize(58, 58);
                 button.setBorder(BorderFactory.createLineBorder(new Color(123, 179, 128)));
@@ -88,18 +92,8 @@ public class BlackWhite extends JFrame {
         return this.currentPiece;
     }
 
-    // 保存落子轨迹
-    public void trace(int x, int y) {
-        trace.addLast(new Point(x, y));
-        Point rp = trace.removeFirst();
-
-        if (rp.getX() >= 0 && rp.getX() < bs.length && rp.getY() >= 0 && rp.getY() < bs.length) {
-            bs[rp.getX()][rp.getY()].setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        }
-    }
-
     public void refush() {
-        int[][] board = ai.getCb().getBoard();
+        int[][] board = this.cb.getBoard();
         int white = 0;
         int black = 0;
         for (int x = 0; x < board.length; x++) {
@@ -114,7 +108,7 @@ public class BlackWhite extends JFrame {
             }
         }
 
-        for (Point p : trace) {
+        for (Point p : cb.getTrace()) {
             if (p.getX() < 0 || p.getX() > board.length - 1 || p.getY() < 0 || p.getY() > board.length - 1) {
                 continue;
             } else {
@@ -127,119 +121,66 @@ public class BlackWhite extends JFrame {
 
     }
 
-    public Piece switchPiect() {
-        if (ai.hasChoice(-this.currentPiece.val())) {
-            this.currentPiece = this.currentPiece.next();
-            currentPieceLabel.setIcon(this.currentPiece.getIconSm());
-            return this.currentPiece;
-        } else if (ai.hasChoice(this.currentPiece.val())) {
-            return this.currentPiece;
+    public Piece nextPlayer() {
+        if (this.currentPlayer == this.player1) {
+            this.currentPlayer = this.player2;
         } else {
+            this.currentPlayer = this.player1;
+        }
+
+        if (this.cb.hasChoice(this.currentPlayer.getPiece())) {
+            this.currentPlayer.think();
+            return this.currentPlayer.getPiece();
+        } else if (isFinish()) {
+            this.state = BWState.FINISH;
             return null;
+        } else {
+            return nextPlayer();
         }
-
     }
 
-    class BWActionListener implements ActionListener {
-
-        private int x;
-        private int y;
-        private BlackWhiteAI ai;
-        private BlackWhite bw;
-
-        public BWActionListener(int x, int y, BlackWhiteAI ai, BlackWhite bw) {
-            this.x = x;
-            this.y = y;
-            this.ai = ai;
-            this.bw = bw;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (!bw.getUserPieceEnum().equals(bw.getCurrentPiece())) {
-                return;
-            }
-
-            if (ai.fall(x, y, bw.getCurrentPiece().val()) == 0) {
-                return;
-            } else {
-                trace(x, y);
-                bw.refush();
-
-                if (ai.isFinish()) {
-                    JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);
-                    return;
-                }
-            }
-
-            Piece lastPiece = bw.getCurrentPiece();
-            Piece nextPiece = bw.switchPiect();
-            if (nextPiece == lastPiece) {
-                return;
-            } else if (nextPiece == null) {
-                JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-
-            next(nextPiece);
-
-        }
-
-        private void next(Piece piece) {
-            
-            new Thread(() -> {
-                Piece lastPiece;
-                Piece nextPiece = piece;
-                do {
-                    int[] next = ai.next(nextPiece.val());
-                    if (ai.fall(next[0], next[1], bw.getCurrentPiece().val()) == nextPiece.val()) {
-                        trace(next[0], next[1]);
-                        bw.refush();
-    
-                        if (ai.isFinish()) {
-                            JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋",
-                                    JOptionPane.INFORMATION_MESSAGE);
-                            return;
-                        }
-                    }
-                    lastPiece = bw.getCurrentPiece();
-                    nextPiece = bw.switchPiect();
-                    if (nextPiece == null) {
-                        JOptionPane.showMessageDialog(bw, resultMsg(ai.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);
-                        return;
-                    }
-                } while (nextPiece == lastPiece);
-            }).start();
-            
-        }
-
-        private String resultMsg(int result) {
-            return result > 0 ? "对局结束，黑方胜！" : result < 0 ? "对局结束，白方胜！" : "对局结束，双方平局！";
-        }
-
+    private boolean isFinish() {
+        return this.cb.getFreeSize() <= 0 
+            || (!this.cb.hasChoice(this.player1.getPiece()) && !this.cb.hasChoice(this.player2.getPiece()));
     }
 
-    class Point {
-        private int x;
-        private int y;
-
-        public Point(int x, int y) {
-            this.x = x;
-            this.y = y;
+    public void start() {
+        while (this.state != BWState.FINISH) {
+            if (this.currentPlayer.getState() == Player.State.THINKING) {
+                continue;
+            } else if (this.currentPlayer.getState() == Player.State.DONE) {
+                System.out.println("refush");
+                refush();
+                System.out.println("nextPlayer");
+                nextPlayer();
+            }
         }
 
-        public int getX() {
-            return this.x;
-        }
+        // finished
+        JOptionPane.showMessageDialog(this, resultMsg(this.cb.result()), "黑白棋", JOptionPane.INFORMATION_MESSAGE);
+    }
 
-        public int getY() {
-            return this.y;
-        }
+    private String resultMsg(int result) {
+        return result > 0 ? "对局结束，黑方胜！" : result < 0 ? "对局结束，白方胜！" : "对局结束，双方平局！";
+    }
+
+    public void setState(BWState state) {
+        this.state = state;
+    }
+
+    public Player getCurrentPlayer() {
+        return this.currentPlayer;
     }
 
     public static void main(String[] args) {
         int size = 8;
-        BlackWhiteAI ai = new BlackWhiteAI(size, size);
-        new BlackWhite(ai, size, Piece.BLACK);
+        ChessBoard cb = new ChessBoard(size, size);
+        Player player1 = new HumanPlayer(cb, Piece.BLACK);
+        player1.setState(State.THINKING);
+        Player player2 = new BlackWhiteAI(cb, Piece.WHITE);
+        player2.setState(State.DONE);
+        BlackWhite bw = new BlackWhite(player1, player2, cb);
+        bw.start();
     }
+
 }
