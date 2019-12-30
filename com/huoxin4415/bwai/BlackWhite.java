@@ -17,21 +17,15 @@ public class BlackWhite extends JFrame {
 
     private static final long serialVersionUID = -5050817808729948877L;
 
-    // private BlackWhiteAI ai;    // AI决策对象
-    private Piece userPiece;    // 玩家棋子
-    private Piece currentPiece; // 当前待落棋子
-    private BWState state;    // 棋局状态
-
-    private ChessBoard cb;
-    private Player player1;
-    private Player player2;
-    private Player currentPlayer;
+    private BWState state;  // 棋局状态
+    private ChessBoard cb;  // 棋盘  
+    private Player player1; // 玩家1，先手
+    private Player player2; // 玩家2
+    private Player currentPlayer;   // 当前待落子玩家
 
     private JButton[][] bs;     // 棋盘棋子按钮
     private JLabel scoreInfoLabel;  // 得分Label
     private JLabel currentPieceLabel;   // 当前待落棋子Label
-
-    
 
     // 构造函数
     public BlackWhite(Player player1, Player player2, ChessBoard cb) {
@@ -39,8 +33,7 @@ public class BlackWhite extends JFrame {
         this.player2 = player2;
         this.currentPlayer = this.player1;
         this.cb = cb;
-        this.state = BWState.WAITING;
-        this.currentPiece = player1.getPiece();
+        this.state = BWState.PLAYING;
 
         // 初始化棋盘panel
         JPanel boardPanel = new JPanel();
@@ -67,7 +60,7 @@ public class BlackWhite extends JFrame {
         scorePanel.add(scoreInfoLabel);
         scorePanel.add(new JLabel("    当前:"));
         this.currentPieceLabel = new JLabel();
-        this.currentPieceLabel.setIcon(this.currentPiece.getIconSm());
+        this.currentPieceLabel.setIcon(this.currentPlayer.getPiece().getIconSm());
         scorePanel.add(currentPieceLabel);
 
         this.add(scorePanel, BorderLayout.SOUTH);
@@ -82,14 +75,6 @@ public class BlackWhite extends JFrame {
         this.setVisible(true);
 
         refush();
-    }
-
-    public Piece getUserPieceEnum() {
-        return this.userPiece;
-    }
-
-    public Piece getCurrentPiece() {
-        return this.currentPiece;
     }
 
     public void refush() {
@@ -128,6 +113,8 @@ public class BlackWhite extends JFrame {
             this.currentPlayer = this.player1;
         }
 
+        this.currentPieceLabel.setIcon(this.currentPlayer.getPiece().getIconSm());
+
         if (this.cb.hasChoice(this.currentPlayer.getPiece())) {
             this.currentPlayer.think();
             return this.currentPlayer.getPiece();
@@ -145,13 +132,13 @@ public class BlackWhite extends JFrame {
     }
 
     public void start() {
+        this.currentPlayer.think();
+
         while (this.state != BWState.FINISH) {
             if (this.currentPlayer.getState() == Player.State.THINKING) {
                 continue;
             } else if (this.currentPlayer.getState() == Player.State.DONE) {
-                System.out.println("refush");
                 refush();
-                System.out.println("nextPlayer");
                 nextPlayer();
             }
         }
@@ -164,10 +151,6 @@ public class BlackWhite extends JFrame {
         return result > 0 ? "对局结束，黑方胜！" : result < 0 ? "对局结束，白方胜！" : "对局结束，双方平局！";
     }
 
-    public void setState(BWState state) {
-        this.state = state;
-    }
-
     public Player getCurrentPlayer() {
         return this.currentPlayer;
     }
@@ -175,7 +158,8 @@ public class BlackWhite extends JFrame {
     public static void main(String[] args) {
         int size = 8;
         ChessBoard cb = new ChessBoard(size, size);
-        Player player1 = new HumanPlayer(cb, Piece.BLACK);
+        // Player player1 = new HumanPlayer(cb, Piece.BLACK);
+        Player player1 = new BlackWhiteAI(cb, Piece.BLACK);
         player1.setState(State.THINKING);
         Player player2 = new BlackWhiteAI(cb, Piece.WHITE);
         player2.setState(State.DONE);

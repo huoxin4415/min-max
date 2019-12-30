@@ -33,9 +33,7 @@ public abstract class Player {
     public int fall(int x, int y) {
         System.out.println(String.format("%s fall:[%d,%d]", piece.toString(), x ,y));
         int result = this.cb.fall(x, y, piece.val());
-        System.out.println("result:" + result);
         setState(State.DONE);
-        System.out.println(getState());
         return result;
     }
 

@@ -3,10 +3,14 @@ package com.huoxin4415.bwai;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class BlackWhiteAI extends Player{
 
     private TreeNode current;
+
+    private ExecutorService es = Executors.newSingleThreadExecutor();
 
     public BlackWhiteAI(ChessBoard cb, Piece piece) {
         super(cb, piece);
@@ -26,6 +30,10 @@ public class BlackWhiteAI extends Player{
             System.out.print(String.format("[%d,%d]:%d  ", node.getX(), node.getY(), node.getScore()));
             if (node.getScore() > nextNode.getScore()) {
             	nextNode = node;
+            } else if (node.getScore() == nextNode.getScore()) {
+                if (Math.random() < 0.5) { // 评分相等，随机匹配
+                    nextNode = node;
+                }
             }
         }
         System.out.println();
@@ -211,12 +219,13 @@ public class BlackWhiteAI extends Player{
     @Override
     public void think() {
         setState(State.THINKING);
-        new Thread(() -> {
+        
+        es.execute(() -> {
             int[] nextFall = next(this.getPiece().val());
 
             // AI想好后自动落子
             fall(nextFall[0], nextFall[1]);
-        }).start();
+        });
     }
 
     class ExtendRunnable implements Runnable {
