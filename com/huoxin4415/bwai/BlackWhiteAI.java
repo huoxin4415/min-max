@@ -3,44 +3,37 @@ package com.huoxin4415.bwai;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class BlackWhiteAI {
+public class BlackWhiteAI extends Player{
 
-    private ChessBoard cb;
     private TreeNode current;
 
-    private static final int MAX_LEVEL = 23;
+    private ExecutorService es = Executors.newSingleThreadExecutor();
 
-    private int piece;
-
-    public BlackWhiteAI(int width, int height) {
-        this.cb = new ChessBoard(width, height);
-        this.piece = -1;
-    }
-
-    public int fall(int x, int y, int piece) {
-        if (this.cb.fall(x, y, piece) != 0) {
-            this.current = new TreeNode(x, y, piece);
-            System.out.println(String.format("%s fall:[%d,%d]", piece == 1? "black" : "white", x ,y));
-            return piece;
-        } else {
-            return 0;
-        }
+    public BlackWhiteAI(ChessBoard cb, Piece piece) {
+        super(cb, piece);
     }
 
     public int[] next(int nextPiece) {
         long startTime = System.currentTimeMillis();
-        this.current.setPiece(-nextPiece);
+        LinkedList<Point> trace = cb.getTrace();
+        this.current = new TreeNode(trace.getLast().getX(), trace.getLast().getY(), -nextPiece);
         // extend(this.current, 1, this.cb);
         extendCurrent(this.current, 1, this.cb);
         System.out.println(String.format("current score:%d", this.current.getScore().intValue()));
         TreeNode nextNode = new TreeNode(0, 0, 0);
         nextNode.setScore(Integer.MIN_VALUE);
-        System.out.print("score：");
+        System.out.print("score:");
         for(TreeNode node : this.current.getChildren()) {
             System.out.print(String.format("[%d,%d]:%d  ", node.getX(), node.getY(), node.getScore()));
             if (node.getScore() > nextNode.getScore()) {
             	nextNode = node;
+            } else if (node.getScore() == nextNode.getScore()) {
+                if (Math.random() < 0.5) { // 评分相等，随机匹配
+                    nextNode = node;
+                }
             }
         }
         System.out.println();
@@ -92,7 +85,7 @@ public class BlackWhiteAI {
 
     private void extend(TreeNode node, int level, ChessBoard cb) {
         
-        if (level < MAX_LEVEL) {
+        if (level < Config.MAX_LEVEL) {
             boolean cut = false;
             for (int x = Math.max(cb.getMinX() - 1, 0); x < Math.min(cb.getMaxX() + 2, cb.getWidth()) && !cut; x++) {
                 for (int y = Math.max(cb.getMinY() - 1, 0); y < Math.min(cb.getMaxY() + 2, cb.getHeight()); y++) {
@@ -101,7 +94,7 @@ public class BlackWhiteAI {
                         if (node.getScore() != null && node.getParent() != null) {
                             List<TreeNode> brothers = node.getParent().getChildren();
 
-                            if (node.getPiece() != this.piece) { // MAX
+                            if (node.getPiece() != this.getPiece().val()) { // MAX
                                 for (TreeNode brother : brothers) {
                                     if (node != brother && null != brother.getScore() && node.getScore() >= brother.getScore()) {
                                         cut = true;
@@ -153,12 +146,13 @@ public class BlackWhiteAI {
         }
 
         if (node.getChildren() == null || node.getChildren().size() == 0) { // 叶子节点
-            int score = Score.grade(cb.getBoard(), this.piece, cb.getFreeSize());
+            // int score = SafetyScorer.grade(cb.getBoard(), this.piece);
+            int score = PositionScorer.grade(cb.getBoard(), this.getPiece().val(), cb.getFreeSize());
 
             node.setScore(score);
             TreeNode p = node.getParent();
             if (p != null) {
-                if (node.getPiece() != this.piece) { // MAX
+                if (node.getPiece() != this.getPiece().val()) { // MAX
                     if (p.getScore() == null) {
                         p.setScore(score);
                     } else {
@@ -176,7 +170,7 @@ public class BlackWhiteAI {
             return;
         } else if (node.getParent() != null){ // 分支节点
             int score = node.getScore();
-            if (node.getPiece() != this.piece) { // MAX
+            if (node.getPiece() != this.getPiece().val()) { // MAX
                 TreeNode p = node.getParent(); // MIN
                 if (p.getScore() == null) {
                     p.setScore(score);
@@ -220,6 +214,18 @@ public class BlackWhiteAI {
         }
         CompletableFuture<Void> cfs = CompletableFuture.allOf(cfList.toArray(new CompletableFuture[cfList.size()]));
         cfs.join();
+    }
+
+    @Override
+    public void think() {
+        setState(State.THINKING);
+        
+        es.execute(() -> {
+            int[] nextFall = next(this.getPiece().val());
+
+            // AI想好后自动落子
+            fall(nextFall[0], nextFall[1]);
+        });
     }
 
     class ExtendRunnable implements Runnable {
@@ -295,4 +301,5 @@ public class BlackWhiteAI {
             return this.children;
         }
     }
+
 }

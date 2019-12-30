@@ -1,5 +1,7 @@
 package com.huoxin4415.bwai;
 
+import java.util.LinkedList;
+
 public class ChessBoard {
     private int width;
     private int height;
@@ -9,6 +11,8 @@ public class ChessBoard {
     private int maxY = Integer.MIN_VALUE;
     private int[][] board;
     private int freeSize;
+
+    private LinkedList<Point> trace;    // 落子轨迹
 
     public ChessBoard(int width, int height) {
         this.width = width;
@@ -23,6 +27,10 @@ public class ChessBoard {
         this.maxX = width / 2;
         this.minY = height / 2 - 1;
         this.maxY = height / 2;
+
+        this.trace = new LinkedList<>();
+        this.trace.addFirst(new Point(Integer.MIN_VALUE, Integer.MIN_VALUE)); // 占位对象
+        this.trace.addFirst(new Point(Integer.MIN_VALUE, Integer.MIN_VALUE)); // 占位对象
     }
 
     public ChessBoard(ChessBoard cb) {
@@ -63,6 +71,12 @@ public class ChessBoard {
                 maxY = y;
             }
             this.freeSize--;
+
+            if (this.trace != null) {
+                this.trace.addLast(new Point(x, y));
+                this.trace.removeFirst();
+            }
+            
             return piece;
         } else {
             return 0;
@@ -111,6 +125,40 @@ public class ChessBoard {
             }
         }
         return result;
+    }
+
+    public boolean hasChoice(Piece piece) {
+        for (int x = Math.max(this.getMinX() - 1, 0); x < Math.min(this.getMaxX() + 2, this.getWidth()); x++) {
+            for (int y = Math.max(this.getMinY() - 1, 0); y < Math.min(this.getMaxY() + 2, this.getHeight()); y++) {
+                if (this.getBoard()[x][y] == 0) {
+                    ChessBoard childCb = new ChessBoard(this);
+                    if (childCb.fall(x, y, piece.val()) != 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public int result() {
+        Integer black = 0;
+        Integer white = 0;
+        int[][] board = this.getBoard();
+        for (int x = 0; x < board.length; x++) {
+            for (int y = 0; y < board[x].length; y++) {
+                if (board[x][y] == 1) {
+                    black++;
+                } else if (board[x][y] == -1) {
+                    white++;
+                } 
+            }
+        }
+        return black.compareTo(white);
+    }
+
+    public LinkedList<Point> getTrace() {
+        return trace;
     }
 
     public int[][] getBoard() {
