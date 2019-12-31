@@ -90,6 +90,7 @@ public class BlackWhite extends JFrame {
                     bs[x][y].setIcon(Piece.WHITE.getIcon());
                     white++;
                 }
+                bs[x][y].setBorder(BorderFactory.createLineBorder(new Color(123, 179, 128)));
             }
         }
 
