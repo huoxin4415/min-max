@@ -19,10 +19,6 @@
 - Player.java 玩家抽象类
 - Point.java 坐标类
 
-##### 待开发：
-1. SafetyScorer评分类
-2. 机器对弈，对比算法优劣
-
 ##### Release Notes
 ##### v0.5 
 - 基础UI
